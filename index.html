@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixIt - خدمات الصيانة المنزلية</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">
+                <span>🔧</span>
+                <span>FixIt</span>
+            </div>
+            <div class="nav-links">
+                <button onclick="showPage('home')" class="nav-btn active" data-page="home">الرئيسية</button>
+                <button onclick="showPage('request')" class="nav-btn" data-page="request">طلب خدمة</button>
+                <button onclick="showPage('track')" class="nav-btn" data-page="track">تتبع الطلبات</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div id="home" class="page active">
+        <div class="hero">
+            <h1>
+                خدمات الصيانة المنزلية
+                <span class="gradient-text">في متناول يدك</span>
+            </h1>
+            <p>احصل على خدمات الصيانة المنزلية بسهولة وسرعة. نربطك بأفضل مقدمي الخدمات في منطقتك</p>
+            <button class="btn-primary" onclick="showPage('request')">اطلب خدمة الآن</button>
+        </div>
+
+        <div class="container">
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #fbbf24, #f97316);">⚡</div>
+                    <h3>خدمات كهربائية</h3>
+                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #60a5fa, #06b6d4);">💧</div>
+                    <h3>خدمات سباكة</h3>
+                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #34d399, #14b8a6);">🌬️</div>
+                    <h3>صيانة مكيفات</h3>
+                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">🔧</div>
+                    <h3>صيانة عامة</h3>
+                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon" style="background: rgba(168, 85, 247, 0.2);">✓</div>
+                    <h3>موثوق وآمن</h3>
+                    <p>جميع مقدمي الخدمات معتمدون وموثوقون</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" style="background: rgba(236, 72, 153, 0.2);">⏱️</div>
+                    <h3>استجابة سريعة</h3>
+                    <p>نصلك في أسرع وقت ممكن</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon" style="background: rgba(59, 130, 246, 0.2);">👤</div>
+                    <h3>سهل الاستخدام</h3>
+                    <p>واجهة بسيطة وسهلة للجميع</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Page -->
+    <div id="request" class="page">
+        <div class="container">
+            <div class="form-section">
+                <h2>طلب خدمة جديد</h2>
+                <p>املأ النموذج أدناه وسنتواصل معك في أقرب وقت</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>الاسم الكامل *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="name" placeholder="أدخل اسمك الكامل" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الجوال *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input type="tel" id="phone" placeholder="05xxxxxxxx" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✉️</span>
+                        <input type="email" id="email" placeholder="example@email.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>العنوان *</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📍</span>
+                        <input type="text" id="address" placeholder="أدخل العنوان بالتفصيل" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نوع الخدمة *</label>
+                        <select id="service" required>
+                            <option value="">اختر نوع الخدمة</option>
+                            <option value="electrical">خدمات كهربائية</option>
+                            <option value="plumbing">خدمات سباكة</option>
+                            <option value="ac">صيانة مكيفات</option>
+                            <option value="general">صيانة عامة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>التاريخ المفضل *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📅</span>
+                            <input type="date" id="date" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>وصف المشكلة *</label>
+                    <textarea id="description" placeholder="اشرح المشكلة بالتفصيل..." required></textarea>
+                </div>
+
+                <button class="btn-primary" onclick="submitRequest()" style="width: 100%; margin-top: 10px;">إرسال الطلب</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Track Page -->
+    <div id="track" class="page">
+        <div class="container requests-section">
+            <h2>طلباتك</h2>
+            <div id="requestsList"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
