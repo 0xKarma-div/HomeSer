@@ -1,8 +1,7 @@
--- إنشاء قاعدة بيانات (إذا لم تُنشأ)
 CREATE DATABASE IF NOT EXISTS homeser_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE homeser_db;
 
--- جدول المستخدمين (users)
+-- (users)
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
@@ -12,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول الطلبات (requests)
+-- (requests)
 CREATE TABLE IF NOT EXISTS requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -25,7 +24,7 @@ CREATE TABLE IF NOT EXISTS requests (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول سجلات النظام (logs)
+-- (logs)
 CREATE TABLE IF NOT EXISTS logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   level VARCHAR(20) NOT NULL,
@@ -34,7 +33,7 @@ CREATE TABLE IF NOT EXISTS logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول الأدمن (admins)
+-- (admins)
 CREATE TABLE IF NOT EXISTS admins (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(100) NOT NULL UNIQUE,
@@ -42,6 +41,3 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ملاحظة: الأدمن الافتراضي سيتم إنشاؤه تلقائياً عند أول استخدام للنظام
--- Username: admin
--- Password: admin123
