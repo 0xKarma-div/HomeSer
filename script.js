@@ -1,7 +1,5 @@
-// مصفوفة لحفظ الطلبات
-let requests = [];
+let currentUser = null;
 
-// بيانات الخدمات
 const services = {
     electrical: { 
         name: 'خدمات كهربائية', 
@@ -25,22 +23,46 @@ const services = {
     }
 };
 
-/**
- * دالة لعرض الصفحة المطلوبة
- * @param {string} pageName - اسم الصفحة (home, request, track)
- */
+
+// Toast Notification
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastIcon = toast.querySelector('.toast-icon');
+    const toastMessage = toast.querySelector('.toast-message');
+    
+    const icons = {
+        success: '✓',
+        error: '✕'
+    };
+    
+    toastIcon.textContent = icons[type] || '✓';
+    toastMessage.textContent = message;
+    toast.className = `toast ${type}`;
+    
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+
+// Navigation & Pages
+
 function showPage(pageName) {
-    // إخفاء جميع الصفحات
+    // التحقق من تسجيل الدخول للصفحات المحمية
+    if ((pageName === 'request' || pageName === 'track') && !currentUser) {
+        showPage('auth');
+        showToast('يجب تسجيل الدخول أولاً', 'error');
+        return;
+    }
+
     const pages = document.querySelectorAll('.page');
-    pages.forEach(page => {
-        page.classList.remove('active');
-    });
+    pages.forEach(page => page.classList.remove('active'));
     
-    // عرض الصفحة المطلوبة
     const selectedPage = document.getElementById(pageName);
-    selectedPage.classList.add('active');
+    if (selectedPage) {
+        selectedPage.classList.add('active');
+    }
     
-    // تحديث أزرار القائمة
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
         btn.classList.remove('active');
@@ -49,144 +71,364 @@ function showPage(pageName) {
         }
     });
 
-    // تحديث قائمة الطلبات إذا كانت صفحة التتبع
-    if (pageName === 'track') {
-        displayRequests();
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+        navLinks.classList.remove('active');
+    }
+
+    // تحميل البيانات حسب الصفحة
+    if (pageName === 'track' && currentUser) {
+        loadUserRequests();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleMenu() {
+    const navLinks = document.querySelector('.nav-links');
+    navLinks.classList.toggle('active');
+}
+
+function selectService(serviceType) {
+    if (!currentUser) {
+        showPage('auth');
+        showToast('يجب تسجيل الدخول أولاً', 'error');
+        return;
+    }
+    showPage('request');
+    setTimeout(() => {
+        const serviceSelect = document.getElementById('service');
+        if (serviceSelect) {
+            serviceSelect.value = serviceType;
+        }
+    }, 300);
+}
+
+function requestService() {
+    if (!currentUser) {
+        showPage('auth');
+        showToast('يجب تسجيل الدخول أولاً', 'error');
+        return;
+    }
+    showPage('request');
+}
+
+
+// Authentication Functions
+
+function updateAuthUI() {
+    const authButtons = document.getElementById('authButtons');
+    
+    if (currentUser) {
+        authButtons.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span style="color:var(--text-secondary);font-size:14px;">مرحباً، ${currentUser.name}</span>
+                <button onclick="handleLogout()" class="nav-btn">
+                    <span class="nav-icon">🚪</span>
+                    <span>تسجيل خروج</span>
+                </button>
+            </div>
+        `;
+    } else {
+        authButtons.innerHTML = `
+            <button onclick="showPage('auth')" class="nav-btn" data-page="auth">
+                <span class="nav-icon">👤</span>
+                <span>تسجيل دخول</span>
+            </button>
+        `;
     }
 }
 
-/**
- * دالة لإرسال طلب جديد
- */
-function submitRequest() {
-    // الحصول على قيم الحقول
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
+async function checkAuthStatus() {
+    try {
+        const response = await fetch('check_auth.php');
+        const data = await response.json();
+        if (data.logged_in) {
+            currentUser = data.user;
+            updateAuthUI();
+        } else {
+            currentUser = null;
+            updateAuthUI();
+        }
+    } catch (error) {
+        console.error('Error checking auth:', error);
+        currentUser = null;
+        updateAuthUI();
+    }
+}
+
+function switchToRegister(e) {
+    if (e) e.preventDefault();
+    
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const authTitle = document.getElementById('authTitle');
+    const authSubtitle = document.getElementById('authSubtitle');
+    
+    if (loginForm) loginForm.style.display = 'none';
+    if (registerForm) registerForm.style.display = 'block';
+    if (authTitle) authTitle.textContent = 'إنشاء حساب جديد';
+    if (authSubtitle) authSubtitle.textContent = 'سجل الآن للوصول إلى جميع الخدمات';
+}
+
+function switchToLogin(e) {
+    if (e) e.preventDefault();
+    
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    const authTitle = document.getElementById('authTitle');
+    const authSubtitle = document.getElementById('authSubtitle');
+    
+    if (registerForm) registerForm.style.display = 'none';
+    if (loginForm) loginForm.style.display = 'block';
+    if (authTitle) authTitle.textContent = 'تسجيل الدخول';
+    if (authSubtitle) authSubtitle.textContent = 'سجل دخولك للوصول إلى خدماتنا';
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!phone || !password) {
+        showToast('يرجى إدخال رقم الجوال وكلمة المرور', 'error');
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'login');
+        formData.append('phone', phone);
+        formData.append('password', password);
+        
+        const response = await fetch('auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('تم تسجيل الدخول بنجاح', 'success');
+            await checkAuthStatus();
+            showPage('home');
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('حدث خطأ في تسجيل الدخول', 'error');
+    }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('registerName').value.trim();
+    const phone = document.getElementById('registerPhone').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    
+    if (!name || !phone || !password) {
+        showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+    }
+    
+    if (!/^(05|5)[0-9]{8}$/.test(phone.replace(/[^0-9]/g, ''))) {
+        showToast('رقم الجوال غير صحيح (يجب أن يبدأ بـ 05 ويتكون من 10 أرقام)', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showToast('كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+        return;
+    }
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'register');
+        formData.append('name', name);
+        formData.append('phone', phone);
+        formData.append('email', email);
+        formData.append('password', password);
+        
+        const response = await fetch('auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('تم إنشاء الحساب بنجاح', 'success');
+            await checkAuthStatus();
+            showPage('home');
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        showToast('حدث خطأ في إنشاء الحساب', 'error');
+    }
+}
+
+async function handleLogout() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'logout');
+        
+        await fetch('auth.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        currentUser = null;
+        updateAuthUI();
+        showToast('تم تسجيل الخروج بنجاح', 'success');
+        showPage('home');
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('حدث خطأ في تسجيل الخروج', 'error');
+    }
+}
+
+
+// Request Functions
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    if (!currentUser) {
+        showToast('يجب تسجيل الدخول أولاً', 'error');
+        showPage('auth');
+        return;
+    }
+    
     const address = document.getElementById('address').value.trim();
     const service = document.getElementById('service').value;
     const date = document.getElementById('date').value;
     const description = document.getElementById('description').value.trim();
 
-    // التحقق من ملء الحقول المطلوبة
-    if (!name || !phone || !address || !service || !date || !description) {
-        alert('⚠️ الرجاء ملء جميع الحقول المطلوبة');
+    if (!address || !service || !date || !description) {
+        showToast('⚠️ الرجاء ملء جميع الحقول المطلوبة', 'error');
         return;
     }
 
-    // التحقق من صحة رقم الجوال
-    if (!validatePhone(phone)) {
-        alert('⚠️ الرجاء إدخال رقم جوال صحيح (مثال: 0512345678)');
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+        showToast('⚠️ الرجاء اختيار تاريخ في المستقبل', 'error');
         return;
     }
 
-    // إنشاء طلب جديد
-    const newRequest = {
-        id: Date.now(),
-        name: name,
-        phone: phone,
-        email: email,
-        address: address,
-        service: service,
-        date: date,
-        description: description,
-        status: 'pending',
-        createdAt: new Date().toLocaleString('ar-SA', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
-    };
+    try {
+        const formData = new FormData();
+        formData.append('address', address);
+        formData.append('service', service);
+        formData.append('date', date);
+        formData.append('description', description);
 
-    // إضافة الطلب إلى المصفوفة
-    requests.unshift(newRequest);
-
-    // مسح الحقول
-    clearForm();
-
-    // عرض رسالة نجاح
-    alert('✅ تم إرسال الطلب بنجاح!\nسنتواصل معك قريباً.');
-
-    // الانتقال إلى صفحة التتبع
-    showPage('track');
+        const response = await fetch('submit_request.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('✅ تم إرسال الطلب بنجاح! سنتواصل معك قريباً', 'success');
+            document.getElementById('requestForm').reset();
+            
+            setTimeout(() => {
+                showPage('track');
+            }, 1500);
+        } else {
+            showToast('❌ ' + result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Submit error:', error);
+        showToast('❌ حدث خطأ في إرسال الطلب', 'error');
+    }
 }
 
-/**
- * دالة للتحقق من صحة رقم الجوال
- * @param {string} phone - رقم الجوال
- * @returns {boolean}
- */
-function validatePhone(phone) {
-    const phoneRegex = /^(05|5)[0-9]{8}$/;
-    return phoneRegex.test(phone);
-}
 
-/**
- * دالة لمسح حقول النموذج
- */
-function clearForm() {
-    document.getElementById('name').value = '';
-    document.getElementById('phone').value = '';
-    document.getElementById('email').value = '';
-    document.getElementById('address').value = '';
-    document.getElementById('service').value = '';
-    document.getElementById('date').value = '';
-    document.getElementById('description').value = '';
-}
+// Track Requests
 
-/**
- * دالة لعرض قائمة الطلبات
- */
-function displayRequests() {
-    const requestsList = document.getElementById('requestsList');
-
-    // إذا لم تكن هناك طلبات
-    if (requests.length === 0) {
-        requestsList.innerHTML = `
+async function loadUserRequests() {
+    if (!currentUser) {
+        document.getElementById('requestsList').innerHTML = `
             <div class="empty-state">
-                <div class="icon">📋</div>
-                <p>لا توجد طلبات حالياً</p>
-                <button class="btn-primary" onclick="showPage('request')">إضافة طلب جديد</button>
+                <div class="icon">🔒</div>
+                <p>يجب تسجيل الدخول أولاً</p>
+                <button class="btn-primary" onclick="showPage('auth')">
+                    <span>تسجيل الدخول</span>
+                    <span class="btn-arrow">←</span>
+                </button>
             </div>
         `;
         return;
     }
 
-    // بناء HTML للطلبات
+    try {
+        const response = await fetch('track_api.php');
+        const result = await response.json();
+        
+        if (result.success) {
+            displayUserRequests(result.data);
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('Load requests error:', error);
+        showToast('حدث خطأ في تحميل الطلبات', 'error');
+    }
+}
+
+function displayUserRequests(requests) {
+    const requestsList = document.getElementById('requestsList');
+    
+    if (requests.length === 0) {
+        requestsList.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🔭</div>
+                <p>لا توجد طلبات حالياً</p>
+                <p style="font-size: 16px;">ابدأ بطلب خدمة جديدة</p>
+                <button class="btn-primary" onclick="showPage('request')">
+                    <span>إضافة طلب جديد</span>
+                    <span class="btn-arrow">←</span>
+                </button>
+            </div>
+        `;
+        return;
+    }
+
     let html = '';
-    requests.forEach(request => {
-        const serviceData = services[request.service];
+    requests.forEach((request, index) => {
+        const serviceData = services[request.service_type] || services.general;
         const statusInfo = getStatusInfo(request.status);
 
         html += `
-            <div class="request-card">
+            <div class="request-card" style="animation-delay: ${index * 0.1}s">
                 <div class="request-header">
                     <div class="request-icon" style="background: ${serviceData.color};">
                         ${serviceData.icon}
                     </div>
                     <div class="request-content">
-                        <h3>${serviceData.name}</h3>
+                        <h3>${serviceData.name} - طلب #${request.id}</h3>
                         <p class="request-description">${request.description}</p>
                         <div class="request-details">
-                            <span>👤 ${request.name}</span>
-                            <span>📱 ${request.phone}</span>
-                            ${request.email ? `<span>✉️ ${request.email}</span>` : ''}
                             <span>📍 ${request.address}</span>
-                            <span>📅 ${request.date}</span>
+                            <span>📅 ${request.preferred_date}</span>
                         </div>
-                        <div class="request-timestamp">تم الإنشاء: ${request.createdAt}</div>
+                        <div class="request-timestamp">تم الإنشاء: ${request.created_at}</div>
                     </div>
-                    <div class="request-status">
+                    <div class="request-actions">
                         <span class="status-badge ${statusInfo.class}">
                             ${statusInfo.icon} ${statusInfo.text}
                         </span>
-                        <select class="status-select" onchange="updateStatus(${request.id}, this.value)">
-                            <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
-                            <option value="processing" ${request.status === 'processing' ? 'selected' : ''}>قيد المعالجة</option>
-                            <option value="completed" ${request.status === 'completed' ? 'selected' : ''}>مكتمل</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -196,11 +438,6 @@ function displayRequests() {
     requestsList.innerHTML = html;
 }
 
-/**
- * دالة للحصول على معلومات الحالة
- * @param {string} status - حالة الطلب
- * @returns {object}
- */
 function getStatusInfo(status) {
     const statusMap = {
         pending: { 
@@ -219,36 +456,59 @@ function getStatusInfo(status) {
             icon: '✅' 
         }
     };
-    return statusMap[status];
+    return statusMap[status] || statusMap.pending;
 }
 
-/**
- * دالة لتحديث حالة الطلب
- * @param {number} id - معرف الطلب
- * @param {string} newStatus - الحالة الجديدة
- */
-function updateStatus(id, newStatus) {
-    // البحث عن الطلب وتحديث حالته
-    const request = requests.find(req => req.id === id);
-    if (request) {
-        request.status = newStatus;
-        displayRequests();
+
+// Event Listeners
+
+function initializeEventListeners() {
+    // Request form
+    const requestForm = document.getElementById('requestForm');
+    if (requestForm) {
+        requestForm.addEventListener('submit', handleFormSubmit);
     }
-}
 
-/**
- * دالة لحذف طلب
- * @param {number} id - معرف الطلب
- */
-function deleteRequest(id) {
-    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-        requests = requests.filter(req => req.id !== id);
-        displayRequests();
+    // Login form
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
     }
-}
 
-// تحميل البيانات عند فتح الصفحة
-window.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ تم تحميل الموقع بنجاح!');
-    console.log('📱 موقع FixIt - خدمات الصيانة المنزلية');
-});
+    // Register form
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
+
+    // Date input min
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+    }
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('navbar');
+        const currentScroll = window.pageYOffset;
+
+        if (currentScroll > 100) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    // Close menu on outside click
+    document.addEventListener('click', (e) => {
+        const navLinks = document.querySelector('.nav-links');
+        const menuToggle = document.querySelector('.menu-toggle');
+        
+        if (navLinks && menuToggle) {
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+            }
+        }
+    });
+}

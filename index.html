@@ -3,76 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HomeSer - منصة خدمات الصيانة المنزلية الأولى في المملكة">
     <title>HomeSer - خدمات الصيانة المنزلية</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span class="toast-icon"></span>
+        <span class="toast-message"></span>
+    </div>
+
     <!-- Navigation -->
-    <nav>
+    <nav id="navbar">
         <div class="container">
-            <div class="logo">
-                <span>🔧</span>
-                <span>HomeSer</span>
+            <div class="logo" onclick="showPage('home')">
+                <span class="logo-icon">🔧</span>
+                <span class="logo-text">HomeSer</span>
             </div>
             <div class="nav-links">
-                <button onclick="showPage('home')" class="nav-btn active" data-page="home">الرئيسية</button>
-                <button onclick="showPage('request')" class="nav-btn" data-page="request">طلب خدمة</button>
-                <button onclick="showPage('track')" class="nav-btn" data-page="track">تتبع الطلبات</button>
+                <button onclick="showPage('home')" class="nav-btn active" data-page="home">
+                    <span class="nav-icon">🏠</span>
+                    <span>الرئيسية</span>
+                </button>
+                <button onclick="showPage('request')" class="nav-btn" data-page="request">
+                    <span class="nav-icon">➕</span>
+                    <span>طلب خدمة</span>
+                </button>
+                <button onclick="showPage('track')" class="nav-btn" data-page="track">
+                    <span class="nav-icon">📊</span>
+                    <span>طلباتي</span>
+                </button>
+                <div id="authButtons">
+                    <button onclick="showPage('auth')" class="nav-btn" data-page="auth">
+                        <span class="nav-icon">👤</span>
+                        <span>تسجيل دخول</span>
+                    </button>
+                </div>
             </div>
+            <button class="menu-toggle" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
     <!-- Home Page -->
     <div id="home" class="page active">
-        <div class="hero">
-            <h1>
-                خدمات الصيانة المنزلية
-                <span class="gradient-text">في متناول يدك</span>
-            </h1>
-            <p>احصل على خدمات الصيانة المنزلية بسهولة وسرعة. نربطك بأفضل مقدمي الخدمات في منطقتك</p>
-            <button class="btn-primary" onclick="showPage('request')">اطلب خدمة الآن</button>
-        </div>
-
-        <div class="container">
-            <div class="services-grid">
-                <div class="service-card">
-                    <div class="service-icon" style="background: linear-gradient(135deg, #fbbf24, #f97316);">⚡</div>
-                    <h3>خدمات كهربائية</h3>
-                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon" style="background: linear-gradient(135deg, #60a5fa, #06b6d4);">💧</div>
-                    <h3>خدمات سباكة</h3>
-                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon" style="background: linear-gradient(135deg, #34d399, #14b8a6);">🌬️</div>
-                    <h3>صيانة مكيفات</h3>
-                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">🔧</div>
-                    <h3>صيانة عامة</h3>
-                    <p>خدمات احترافية وسريعة على مدار الساعة</p>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-background">
+                <div class="hero-circle hero-circle-1"></div>
+                <div class="hero-circle hero-circle-2"></div>
+                <div class="hero-circle hero-circle-3"></div>
+            </div>
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        خدمات الصيانة المنزلية
+                        <span class="gradient-text">في متناول يدك</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        احصل على خدمات الصيانة المنزلية بسهولة وسرعة. نربطك بأفضل مقدمي الخدمات المعتمدين في منطقتك
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn-primary" onclick="requestService()">
+                            <span>اطلب خدمة الآن</span>
+                            <span>←</span>
+                        </button>
+                        <button class="btn-secondary" onclick="showPage('track')">
+                            <span>تتبع طلباتك</span>
+                        </button>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">+500</div>
+                            <div class="stat-label">عميل راضي</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">+1000</div>
+                            <div class="stat-label">خدمة مكتملة</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">دعم متواصل</div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon" style="background: rgba(168, 85, 247, 0.2);">✓</div>
-                    <h3>موثوق وآمن</h3>
-                    <p>جميع مقدمي الخدمات معتمدون وموثوقون</p>
+        <!-- Services Section -->
+        <section class="services-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">خدماتنا المميزة</h2>
+                    <p class="section-subtitle">نوفر لك أفضل الخدمات المنزلية بجودة عالية</p>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon" style="background: rgba(236, 72, 153, 0.2);">⏱️</div>
-                    <h3>استجابة سريعة</h3>
-                    <p>نصلك في أسرع وقت ممكن</p>
+                <div class="services-grid">
+                    <div class="service-card" onclick="selectService('electrical')">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #fbbf24, #f97316);">
+                            <span>⚡</span>
+                        </div>
+                        <h3>خدمات كهربائية</h3>
+                        <p>إصلاح الأعطال الكهربائية، تركيب الإضاءة، وصيانة اللوحات الكهربائية</p>
+                        <ul class="service-features">
+                            <li>✓ فحص شامل للكهرباء</li>
+                            <li>✓ تركيب وصيانة المفاتيح</li>
+                            <li>✓ إصلاح الأعطال الطارئة</li>
+                        </ul>
+                        <button class="service-btn">اطلب الخدمة</button>
+                    </div>
+                    <div class="service-card" onclick="selectService('plumbing')">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #60a5fa, #06b6d4);">
+                            <span>💧</span>
+                        </div>
+                        <h3>خدمات سباكة</h3>
+                        <p>إصلاح التسربات، تركيب الأدوات الصحية، وتسليك المجاري</p>
+                        <ul class="service-features">
+                            <li>✓ كشف وإصلاح التسربات</li>
+                            <li>✓ تسليك المجاري</li>
+                            <li>✓ تركيب الأدوات الصحية</li>
+                        </ul>
+                        <button class="service-btn">اطلب الخدمة</button>
+                    </div>
+                    <div class="service-card" onclick="selectService('ac')">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #34d399, #14b8a6);">
+                            <span>🌬️</span>
+                        </div>
+                        <h3>صيانة مكيفات</h3>
+                        <p>تنظيف وصيانة المكيفات، إصلاح الأعطال، وإعادة تعبئة الفريون</p>
+                        <ul class="service-features">
+                            <li>✓ تنظيف وصيانة دورية</li>
+                            <li>✓ إصلاح الأعطال</li>
+                            <li>✓ تعبئة وتبريد الغاز</li>
+                        </ul>
+                        <button class="service-btn">اطلب الخدمة</button>
+                    </div>
+                    <div class="service-card" onclick="selectService('general')">
+                        <div class="service-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">
+                            <span>🔧</span>
+                        </div>
+                        <h3>صيانة عامة</h3>
+                        <p>أعمال النجارة، الدهان، تركيب الأثاث، وجميع أعمال الصيانة</p>
+                        <ul class="service-features">
+                            <li>✓ أعمال النجارة والدهان</li>
+                            <li>✓ تركيب الأثاث</li>
+                            <li>✓ صيانة الأبواب والنوافذ</li>
+                        </ul>
+                        <button class="service-btn">اطلب الخدمة</button>
+                    </div>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon" style="background: rgba(59, 130, 246, 0.2);">👤</div>
-                    <h3>سهل الاستخدام</h3>
-                    <p>واجهة بسيطة وسهلة للجميع</p>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">لماذا تختار HomeSer؟</h2>
+                    <p class="section-subtitle">نقدم لك أفضل تجربة في خدمات الصيانة المنزلية</p>
                 </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>✓</span></div>
+                        <h3>موثوق وآمن</h3>
+                        <p>جميع مقدمي الخدمات معتمدون ومدربون بخبرة تزيد عن 10 سنوات</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>⚡</span></div>
+                        <h3>استجابة سريعة</h3>
+                        <p>نصلك في أسرع وقت ممكن خلال 24 ساعة من تقديم الطلب</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>💰</span></div>
+                        <h3>أسعار منافسة</h3>
+                        <p>نقدم أفضل الأسعار في السوق مع ضمان الجودة</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>🛡️</span></div>
+                        <h3>ضمان الخدمة</h3>
+                        <p>ضمان شامل على جميع الخدمات المقدمة لمدة 6 أشهر</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>📱</span></div>
+                        <h3>سهل الاستخدام</h3>
+                        <p>واجهة بسيطة وسهلة مع تتبع فوري لجميع طلباتك</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><span>⭐</span></div>
+                        <h3>تقييمات عالية</h3>
+                        <p>تقييم 4.9/5 من أكثر من 500 عميل راضي</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>جاهز لبدء خدمتك؟</h2>
+                    <p>احصل على خدمة صيانة منزلية احترافية الآن</p>
+                    <button class="btn-primary btn-large" onclick="requestService()">
+                        <span>اطلب خدمتك الآن</span>
+                        <span>←</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Login/Register Page -->
+    <div id="auth" class="page">
+        <div class="container">
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <h2 id="authTitle">تسجيل الدخول</h2>
+                    <p id="authSubtitle">سجل دخولك للوصول إلى خدماتنا</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="request-form">
+                    <div class="form-group">
+                        <label>رقم الجوال *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📱</span>
+                            <input type="tel" id="loginPhone" placeholder="05xxxxxxxx" required pattern="^(05|5)[0-9]{8}$">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>كلمة المرور *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <span>تسجيل الدخول</span>
+                        <span>→</span>
+                    </button>
+
+                    <p class="form-footer">
+                        ليس لديك حساب؟ 
+                        <a href="#" onclick="switchToRegister(event); return false;" style="color:#ec4899;font-weight:600;cursor:pointer;">سجل الآن</a>
+                    </p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="request-form" style="display:none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>الاسم الكامل *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">👤</span>
+                                <input type="text" id="registerName" placeholder="أدخل اسمك الكامل" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الجوال *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">📱</span>
+                                <input type="tel" id="registerPhone" placeholder="05xxxxxxxx" required pattern="^(05|5)[0-9]{8}$">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>البريد الإلكتروني (اختياري)</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉️</span>
+                            <input type="email" id="registerEmail" placeholder="example@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>كلمة المرور *</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="registerPassword" placeholder="6 أحرف على الأقل" required minlength="6">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <span>إنشاء حساب</span>
+                        <span>✓</span>
+                    </button>
+
+                    <p class="form-footer">
+                        لديك حساب؟ 
+                        <a href="#" onclick="switchToLogin(event); return false;" style="color:#ec4899;font-weight:600;cursor:pointer;">سجل دخول</a>
+                    </p>
+                </form>
             </div>
         </div>
     </div>
@@ -80,81 +305,104 @@
     <!-- Request Page -->
     <div id="request" class="page">
         <div class="container">
-            <div class="form-section">
-                <h2>طلب خدمة جديد</h2>
-                <p>املأ النموذج أدناه وسنتواصل معك في أقرب وقت</p>
-
-                <div class="form-row">
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <h2>طلب خدمة جديد</h2>
+                    <p>املأ النموذج أدناه وسنتواصل معك في أقرب وقت</p>
+                </div>
+                
+                <form id="requestForm" class="request-form">
                     <div class="form-group">
-                        <label>الاسم الكامل *</label>
+                        <label>العنوان *</label>
                         <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input type="text" id="name" placeholder="أدخل اسمك الكامل" required>
+                            <span class="input-icon">📍</span>
+                            <input type="text" id="address" placeholder="أدخل العنوان بالتفصيل" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>رقم الجوال *</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📱</span>
-                            <input type="tel" id="phone" placeholder="05xxxxxxxx" required>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>نوع الخدمة *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"></span>
+                                <select id="service" required>
+                                    <option value="">اختر نوع الخدمة</option>
+                                    <option value="electrical">⚡ خدمات كهربائية</option>
+                                    <option value="plumbing">💧 خدمات سباكة</option>
+                                    <option value="ac">🌬️ صيانة مكيفات</option>
+                                    <option value="general">🔧 صيانة عامة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>التاريخ المفضل *</label>
+                            <div class="input-wrapper">
+                                <span class="input-icon">📅</span>
+                                <input type="date" id="date" required>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>البريد الإلكتروني</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">✉️</span>
-                        <input type="email" id="email" placeholder="example@email.com">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>العنوان *</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">📍</span>
-                        <input type="text" id="address" placeholder="أدخل العنوان بالتفصيل" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
                     <div class="form-group">
-                        <label>نوع الخدمة *</label>
-                        <select id="service" required>
-                            <option value="">اختر نوع الخدمة</option>
-                            <option value="electrical">خدمات كهربائية</option>
-                            <option value="plumbing">خدمات سباكة</option>
-                            <option value="ac">صيانة مكيفات</option>
-                            <option value="general">صيانة عامة</option>
-                        </select>
+                        <label>وصف المشكلة *</label>
+                        <textarea id="description" placeholder="اشرح المشكلة بالتفصيل... (مثال: يوجد تسريب في حنفية المطبخ)" required rows="5"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label>التاريخ المفضل *</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📅</span>
-                            <input type="date" id="date" required>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="form-group">
-                    <label>وصف المشكلة *</label>
-                    <textarea id="description" placeholder="اشرح المشكلة بالتفصيل..." required></textarea>
-                </div>
-
-                <button class="btn-primary" onclick="submitRequest()" style="width: 100%; margin-top: 10px;">إرسال الطلب</button>
+                    <button type="submit" class="btn-submit">
+                        <span>إرسال الطلب</span>
+                        <span>✓</span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- Track Page -->
     <div id="track" class="page">
-        <div class="container requests-section">
-            <h2>طلباتك</h2>
-            <div id="requestsList"></div>
+        <div class="container">
+            <div class="track-header">
+                <h2>طلباتي</h2>
+                <p>تتبع وإدارة جميع طلبات الصيانة الخاصة بك</p>
+            </div>
+            
+            <div id="requestsList" class="requests-list"></div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <span class="logo-icon">🔧</span>
+                        <span class="logo-text">HomeSer</span>
+                    </div>
+                    <p>منصة خدمات الصيانة المنزلية الأولى في المملكة</p>
+                </div>
+                <div class="footer-section">
+                    <h4>روابط سريعة</h4>
+                    <ul>
+                        <li><a href="#" onclick="showPage('home')">الرئيسية</a></li>
+                        <li><a href="#" onclick="showPage('request')">طلب خدمة</a></li>
+                        <li><a href="#" onclick="showPage('track')">طلباتي</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>تواصل معنا</h4>
+                    <ul>
+                        <li>📱 0500000000</li>
+                        <li>✉️ info@homeser.com</li>
+                        <li>📍 الرياض، المملكة العربية السعودية</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 HomeSer. جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+    
     <script src="script.js"></script>
 </body>
 </html>
