@@ -1,5 +1,4 @@
 <?php
-// config.php - النسخة المحسّنة والمصلحة
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

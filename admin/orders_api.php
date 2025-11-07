@@ -1,5 +1,5 @@
 <?php
-// admin/orders_api.php - معالج طلبات الأدمن
+// admin/orders_api.php 
 require_once dirname(__DIR__) . '/config.php';
 
 // التحقق من تسجيل دخول الأدمن

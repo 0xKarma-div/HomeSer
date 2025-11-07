@@ -1,6 +1,4 @@
 <?php
-// admin/login.php - النسخة المحسّنة
-// إصلاح المسار للوصول لملف config.php
 require_once dirname(__DIR__) . '/config.php';
 
 // إذا الأدمن مسجل دخوله، انتقل للوحة التحكم

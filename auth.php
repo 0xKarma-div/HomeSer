@@ -1,5 +1,4 @@
 <?php
-// auth.php - النسخة المحسّنة
 error_reporting(E_ALL);
 ini_set('display_errors', 0); // إخفاء الأخطاء في الإنتاج
 
