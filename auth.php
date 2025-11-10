@@ -1,112 +1,81 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // إخفاء الأخطاء في الإنتاج
+require_once 'config.php';
 
-require_once __DIR__ . '/config.php';
+header('Content-Type: application/json');
 
-header('Content-Type: application/json; charset=utf-8');
-
-// التحقق من طريقة الطلب
+// التحقق من نوع الطلب
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'طريقة غير مسموحة'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'طريقة غير صحيحة']);
     exit;
 }
 
 $action = $_POST['action'] ?? '';
+$db = getDB();
 
 try {
-    $pdo = getDB();
     
-    // === تسجيل حساب جديد ===
+    // === تسجيل مستخدم جديد ===
     if ($action === 'register') {
+        
         $name = trim($_POST['name'] ?? '');
         $phone = cleanPhone($_POST['phone'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
         
         // التحقق من الحقول المطلوبة
-        if (empty($name)) {
-            throw new Exception('الاسم مطلوب');
-        }
-        
-        if (empty($phone)) {
-            throw new Exception('رقم الجوال مطلوب');
-        }
-        
-        if (empty($password)) {
-            throw new Exception('كلمة المرور مطلوبة');
+        if (empty($name) || empty($phone) || empty($password)) {
+            throw new Exception('الرجاء ملء جميع الحقول المطلوبة');
         }
         
         if (strlen($password) < 6) {
             throw new Exception('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
         }
         
-        // التحقق من صحة رقم الجوال
-        if (!isValidSaudiPhone($phone)) {
-            throw new Exception('رقم الجوال غير صحيح (يجب أن يبدأ بـ 05 ويتكون من 10 أرقام)');
+        // التحقق من رقم الجوال (يبدأ بـ 05 ويكون 10 أرقام)
+        if (!preg_match('/^05[0-9]{8}$/', $phone)) {
+            throw new Exception('رقم الجوال غير صحيح');
         }
         
-        // التحقق من عدم وجود المستخدم مسبقاً
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE phone = ?");
+        // التحقق من عدم تكرار رقم الجوال
+        $stmt = $db->prepare("SELECT id FROM users WHERE phone = ?");
         $stmt->execute([$phone]);
-        
         if ($stmt->fetch()) {
             throw new Exception('رقم الجوال مسجل مسبقاً');
         }
         
         // تشفير كلمة المرور
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        // إدراج المستخدم الجديد
-        $stmt = $pdo->prepare("
-            INSERT INTO users (name, phone, email, password_hash, created_at) 
-            VALUES (?, ?, ?, ?, NOW())
-        ");
+        // إدخال المستخدم في قاعدة البيانات
+        $stmt = $db->prepare("INSERT INTO users (name, phone, email, password_hash, created_at) VALUES (?, ?, ?, ?, NOW())");
+        $stmt->execute([$name, $phone, $email, $hashedPassword]);
         
-        $stmt->execute([$name, $phone, $email, $passwordHash]);
+        // حفظ معلومات المستخدم في الجلسة
+        $_SESSION['user_id'] = $db->lastInsertId();
         
-        if ($stmt->rowCount() > 0) {
-            $userId = $pdo->lastInsertId();
-            
-            // تسجيل الدخول تلقائياً
-            $_SESSION['user_id'] = $userId;
-            $_SESSION['user_phone'] = $phone;
-            
-            // تسجيل الحدث
-            logEvent('info', 'تسجيل مستخدم جديد', [
-                'user_id' => $userId,
-                'phone' => $phone,
-                'name' => $name
-            ]);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'تم إنشاء الحساب بنجاح وتسجيل الدخول',
-                'user' => [
-                    'id' => $userId,
-                    'name' => $name,
-                    'phone' => $phone
-                ]
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            throw new Exception('فشل إنشاء الحساب');
-        }
+        logEvent('info', 'تسجيل مستخدم جديد', ['phone' => $phone]);
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'تم إنشاء الحساب بنجاح',
+            'user' => ['id' => $_SESSION['user_id'], 'name' => $name, 'phone' => $phone, 'email' => $email]
+        ]);
     }
     
     // === تسجيل الدخول ===
     elseif ($action === 'login') {
+        
         $phone = cleanPhone($_POST['phone'] ?? '');
         $password = $_POST['password'] ?? '';
         
         if (empty($phone) || empty($password)) {
-            throw new Exception('يرجى إدخال رقم الجوال وكلمة المرور');
+            throw new Exception('الرجاء إدخال رقم الجوال وكلمة المرور');
         }
         
-        // البحث عن المستخدم
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE phone = ? LIMIT 1");
+        // البحث عن المستخدم في قاعدة البيانات
+        $stmt = $db->prepare("SELECT * FROM users WHERE phone = ?");
         $stmt->execute([$phone]);
-        $user = $stmt->fetch();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$user) {
             throw new Exception('رقم الجوال غير مسجل');
@@ -117,56 +86,31 @@ try {
             throw new Exception('كلمة المرور غير صحيحة');
         }
         
-        // تسجيل الدخول
-        session_regenerate_id(true);
+        // حفظ معلومات المستخدم في الجلسة
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_phone'] = $user['phone'];
         
-        // تسجيل الحدث
-        logEvent('info', 'تسجيل دخول مستخدم', [
-            'user_id' => $user['id'],
-            'phone' => $phone
-        ]);
+        logEvent('info', 'تسجيل دخول', ['user_id' => $user['id']]);
         
         echo json_encode([
             'success' => true,
             'message' => 'تم تسجيل الدخول بنجاح',
-            'user' => [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'phone' => $user['phone'],
-                'email' => $user['email']
-            ]
-        ], JSON_UNESCAPED_UNICODE);
+            'user' => ['id' => $user['id'], 'name' => $user['name'], 'phone' => $user['phone'], 'email' => $user['email']]
+        ]);
     }
     
     // === تسجيل الخروج ===
     elseif ($action === 'logout') {
-        $userId = $_SESSION['user_id'] ?? null;
         
-        session_unset();
         session_destroy();
         
-        if ($userId) {
-            logEvent('info', 'تسجيل خروج مستخدم', ['user_id' => $userId]);
-        }
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'تم تسجيل الخروج'
-        ], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => true, 'message' => 'تم تسجيل الخروج']);
     }
     
     else {
-        throw new Exception('إجراء غير معروف');
+        throw new Exception('عملية غير معروفة');
     }
     
 } catch (Exception $e) {
-    // تسجيل الخطأ
-    error_log("Auth Error: " . $e->getMessage());
-    
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
+?>

@@ -1,29 +1,20 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once 'config.php';
 
-header('Content-Type: application/json; charset=utf-8');
+header('Content-Type: application/json');
 
 // التحقق من تسجيل الدخول
 if (!isUserLogged()) {
-    http_response_code(401);
-    echo json_encode([
-        'success' => false, 
-        'message' => 'يجب تسجيل الدخول أولاً'
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً']);
     exit;
 }
 
 try {
-    $user = getCurrentUser();
     
-    if (!$user) {
-        throw new Exception('خطأ في جلب بيانات المستخدم');
-    }
+    $db = getDB();
     
-    $pdo = getDB();
-    
-    // جلب جميع طلبات المستخدم مع الترتيب حسب الأحدث
-    $stmt = $pdo->prepare("
+    // جلب طلبات المستخدم من قاعدة البيانات (الأحدث أولاً)
+    $stmt = $db->prepare("
         SELECT 
             id,
             address,
@@ -37,20 +28,16 @@ try {
         ORDER BY created_at DESC
     ");
     
-    $stmt->execute([$user['id']]);
-    $requests = $stmt->fetchAll();
+    $stmt->execute([$_SESSION['user_id']]);
+    $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([
         'success' => true,
         'data' => $requests,
         'count' => count($requests)
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
     
 } catch (Exception $e) {
-    error_log("Track API Error: " . $e->getMessage());
-    
-    echo json_encode([
-        'success' => false,
-        'message' => 'حدث خطأ في تحميل الطلبات'
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'حدث خطأ في تحميل الطلبات']);
 }
+?>

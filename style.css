@@ -1327,3 +1327,22 @@ textarea {
         text-align: center;
     }
 }
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 15px;
+}
+
+.form-footer a {
+    color: #ec4899;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.form-footer a:hover {
+    color: #f472b6;
+    text-decoration: underline;
+}

@@ -1,5 +1,7 @@
+// متغير لحفظ بيانات المستخدم الحالي
 let currentUser = null;
 
+// معلومات الخدمات
 const services = {
     electrical: { 
         name: 'خدمات كهربائية', 
@@ -23,20 +25,20 @@ const services = {
     }
 };
 
-
-// Toast Notification
-
+// ==============================================
+// Toast Notification - إشعارات
+// ==============================================
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastIcon = toast.querySelector('.toast-icon');
     const toastMessage = toast.querySelector('.toast-message');
     
     const icons = {
-        success: '✓',
+        success: '✔',
         error: '✕'
     };
     
-    toastIcon.textContent = icons[type] || '✓';
+    toastIcon.textContent = icons[type] || '✔';
     toastMessage.textContent = message;
     toast.className = `toast ${type}`;
     
@@ -44,10 +46,12 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-
-// Navigation & Pages
-
+// ==============================================
+// Navigation - التنقل بين الصفحات
+// ==============================================
 function showPage(pageName) {
+    console.log('عرض صفحة:', pageName); // للتتبع
+    
     // التحقق من تسجيل الدخول للصفحات المحمية
     if ((pageName === 'request' || pageName === 'track') && !currentUser) {
         showPage('auth');
@@ -55,14 +59,17 @@ function showPage(pageName) {
         return;
     }
 
+    // إخفاء كل الصفحات
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => page.classList.remove('active'));
     
+    // عرض الصفحة المطلوبة
     const selectedPage = document.getElementById(pageName);
     if (selectedPage) {
         selectedPage.classList.add('active');
     }
     
+    // تحديث الأزرار في الـ navbar
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
         btn.classList.remove('active');
@@ -71,6 +78,7 @@ function showPage(pageName) {
         }
     });
 
+    // إغلاق القائمة في الموبايل
     const navLinks = document.querySelector('.nav-links');
     if (navLinks) {
         navLinks.classList.remove('active');
@@ -81,6 +89,7 @@ function showPage(pageName) {
         loadUserRequests();
     }
 
+    // الانتقال لأعلى الصفحة
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -113,9 +122,11 @@ function requestService() {
     showPage('request');
 }
 
+// ==============================================
+// Authentication - تسجيل الدخول
+// ==============================================
 
-// Authentication Functions
-
+// تحديث واجهة المستخدم
 function updateAuthUI() {
     const authButtons = document.getElementById('authButtons');
     
@@ -139,54 +150,55 @@ function updateAuthUI() {
     }
 }
 
+// فحص حالة تسجيل الدخول
 async function checkAuthStatus() {
     try {
         const response = await fetch('check_auth.php');
         const data = await response.json();
+        
+        console.log('حالة المصادقة:', data); // للتتبع
+        
         if (data.logged_in) {
             currentUser = data.user;
-            updateAuthUI();
         } else {
             currentUser = null;
-            updateAuthUI();
         }
+        
+        updateAuthUI();
+        return currentUser;
     } catch (error) {
-        console.error('Error checking auth:', error);
+        console.error('خطأ في فحص المصادقة:', error);
         currentUser = null;
         updateAuthUI();
+        return null;
     }
 }
 
+// التبديل إلى نموذج التسجيل
 function switchToRegister(e) {
     if (e) e.preventDefault();
     
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const authTitle = document.getElementById('authTitle');
-    const authSubtitle = document.getElementById('authSubtitle');
-    
-    if (loginForm) loginForm.style.display = 'none';
-    if (registerForm) registerForm.style.display = 'block';
-    if (authTitle) authTitle.textContent = 'إنشاء حساب جديد';
-    if (authSubtitle) authSubtitle.textContent = 'سجل الآن للوصول إلى جميع الخدمات';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('authTitle').textContent = 'إنشاء حساب جديد';
+    document.getElementById('authSubtitle').textContent = 'سجل الآن للوصول إلى جميع الخدمات';
 }
 
+// التبديل إلى نموذج الدخول
 function switchToLogin(e) {
     if (e) e.preventDefault();
     
-    const registerForm = document.getElementById('registerForm');
-    const loginForm = document.getElementById('loginForm');
-    const authTitle = document.getElementById('authTitle');
-    const authSubtitle = document.getElementById('authSubtitle');
-    
-    if (registerForm) registerForm.style.display = 'none';
-    if (loginForm) loginForm.style.display = 'block';
-    if (authTitle) authTitle.textContent = 'تسجيل الدخول';
-    if (authSubtitle) authSubtitle.textContent = 'سجل دخولك للوصول إلى خدماتنا';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('authTitle').textContent = 'تسجيل الدخول';
+    document.getElementById('authSubtitle').textContent = 'سجل دخولك للوصول إلى خدماتنا';
 }
 
+// تسجيل الدخول
 async function handleLogin(e) {
     e.preventDefault();
+    
+    console.log('محاولة تسجيل الدخول...'); // للتتبع
     
     const phone = document.getElementById('loginPhone').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -202,6 +214,8 @@ async function handleLogin(e) {
         formData.append('phone', phone);
         formData.append('password', password);
         
+        console.log('إرسال بيانات تسجيل الدخول...'); // للتتبع
+        
         const response = await fetch('auth.php', {
             method: 'POST',
             body: formData
@@ -209,21 +223,31 @@ async function handleLogin(e) {
         
         const result = await response.json();
         
+        console.log('نتيجة تسجيل الدخول:', result); // للتتبع
+        
         if (result.success) {
-            showToast('تم تسجيل الدخول بنجاح', 'success');
-            await checkAuthStatus();
-            showPage('home');
+            currentUser = result.user;
+            updateAuthUI();
+            document.getElementById('loginForm').reset();
+            showToast('تم تسجيل الدخول بنجاح ✔', 'success');
+            
+            setTimeout(() => {
+                showPage('home');
+            }, 800);
         } else {
             showToast(result.message, 'error');
         }
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('خطأ في تسجيل الدخول:', error);
         showToast('حدث خطأ في تسجيل الدخول', 'error');
     }
 }
 
+// إنشاء حساب جديد
 async function handleRegister(e) {
     e.preventDefault();
+    
+    console.log('محاولة إنشاء حساب...'); // للتتبع
     
     const name = document.getElementById('registerName').value.trim();
     const phone = document.getElementById('registerPhone').value.trim();
@@ -253,6 +277,8 @@ async function handleRegister(e) {
         formData.append('email', email);
         formData.append('password', password);
         
+        console.log('إرسال بيانات التسجيل...'); // للتتبع
+        
         const response = await fetch('auth.php', {
             method: 'POST',
             body: formData
@@ -260,19 +286,27 @@ async function handleRegister(e) {
         
         const result = await response.json();
         
+        console.log('نتيجة التسجيل:', result); // للتتبع
+        
         if (result.success) {
-            showToast('تم إنشاء الحساب بنجاح', 'success');
-            await checkAuthStatus();
-            showPage('home');
+            currentUser = result.user;
+            updateAuthUI();
+            document.getElementById('registerForm').reset();
+            showToast('تم إنشاء الحساب بنجاح ✔', 'success');
+            
+            setTimeout(() => {
+                showPage('home');
+            }, 800);
         } else {
             showToast(result.message, 'error');
         }
     } catch (error) {
-        console.error('Register error:', error);
+        console.error('خطأ في التسجيل:', error);
         showToast('حدث خطأ في إنشاء الحساب', 'error');
     }
 }
 
+// تسجيل الخروج
 async function handleLogout() {
     try {
         const formData = new FormData();
@@ -288,14 +322,16 @@ async function handleLogout() {
         showToast('تم تسجيل الخروج بنجاح', 'success');
         showPage('home');
     } catch (error) {
-        console.error('Logout error:', error);
+        console.error('خطأ في تسجيل الخروج:', error);
         showToast('حدث خطأ في تسجيل الخروج', 'error');
     }
 }
 
+// ==============================================
+// Request Functions - وظائف الطلبات
+// ==============================================
 
-// Request Functions
-
+// إرسال طلب خدمة
 async function handleFormSubmit(e) {
     e.preventDefault();
     
@@ -349,14 +385,12 @@ async function handleFormSubmit(e) {
             showToast('❌ ' + result.message, 'error');
         }
     } catch (error) {
-        console.error('Submit error:', error);
+        console.error('خطأ في إرسال الطلب:', error);
         showToast('❌ حدث خطأ في إرسال الطلب', 'error');
     }
 }
 
-
-// Track Requests
-
+// تحميل طلبات المستخدم
 async function loadUserRequests() {
     if (!currentUser) {
         document.getElementById('requestsList').innerHTML = `
@@ -382,11 +416,12 @@ async function loadUserRequests() {
             showToast(result.message, 'error');
         }
     } catch (error) {
-        console.error('Load requests error:', error);
+        console.error('خطأ في تحميل الطلبات:', error);
         showToast('حدث خطأ في تحميل الطلبات', 'error');
     }
 }
 
+// عرض طلبات المستخدم
 function displayUserRequests(requests) {
     const requestsList = document.getElementById('requestsList');
     
@@ -438,6 +473,7 @@ function displayUserRequests(requests) {
     requestsList.innerHTML = html;
 }
 
+// الحصول على معلومات الحالة
 function getStatusInfo(status) {
     const statusMap = {
         pending: { 
@@ -459,26 +495,32 @@ function getStatusInfo(status) {
     return statusMap[status] || statusMap.pending;
 }
 
-
-// Event Listeners
+// ==============================================
+// Event Listeners - ربط الأحداث
+// ==============================================
 
 function initializeEventListeners() {
+    console.log('تهيئة Event Listeners...'); // للتتبع
+    
     // Request form
     const requestForm = document.getElementById('requestForm');
     if (requestForm) {
         requestForm.addEventListener('submit', handleFormSubmit);
+        console.log('✅ ربط نموذج الطلب');
     }
 
     // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+        console.log('✅ ربط نموذج تسجيل الدخول');
     }
 
     // Register form
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
+        console.log('✅ ربط نموذج التسجيل');
     }
 
     // Date input min
@@ -486,6 +528,7 @@ function initializeEventListeners() {
     if (dateInput) {
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
+        console.log('✅ تعيين الحد الأدنى للتاريخ');
     }
 
     // Navbar scroll effect
@@ -511,4 +554,21 @@ function initializeEventListeners() {
             }
         }
     });
+    
+    console.log('✅ تم تهيئة جميع Event Listeners');
 }
+
+// Initialize - التهيئة عند تحميل الصفحة
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 بدء تحميل الصفحة...');
+    
+    initializeEventListeners();
+    
+    // فحص حالة التسجيل عند تحميل الصفحة
+    await checkAuthStatus();
+    
+    console.log('✅ تم تحميل الصفحة بنجاح');
+    console.log('المستخدم الحالي:', currentUser);
+});

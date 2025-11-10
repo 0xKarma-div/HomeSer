@@ -1,107 +1,43 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once 'config.php';
 
-header('Content-Type: application/json; charset=utf-8');
-
-// التحقق من طريقة الطلب
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'طريقة غير مسموحة'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+header('Content-Type: application/json');
 
 // التحقق من تسجيل الدخول
 if (!isUserLogged()) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'message' => 'يجب تسجيل الدخول أولاً']);
     exit;
 }
 
 try {
-    // جمع البيانات
-    $address = trim($_POST['address'] ?? '');
-    $service = trim($_POST['service'] ?? '');
-    $date = trim($_POST['date'] ?? '');
-    $description = trim($_POST['description'] ?? '');
     
-    // التحقق من البيانات
-    if (empty($address)) {
-        throw new Exception('العنوان مطلوب');
-    }
+    $db = getDB();
     
-    if (empty($service)) {
-        throw new Exception('نوع الخدمة مطلوب');
-    }
-    
-    if (empty($date)) {
-        throw new Exception('التاريخ المفضل مطلوب');
-    }
-    
-    if (empty($description)) {
-        throw new Exception('وصف المشكلة مطلوب');
-    }
-    
-    // التحقق من صحة التاريخ
-    $selectedDate = strtotime($date);
-    $today = strtotime('today');
-    
-    if ($selectedDate < $today) {
-        throw new Exception('يرجى اختيار تاريخ في المستقبل');
-    }
-    
-    // التحقق من نوع الخدمة
-    $validServices = ['electrical', 'plumbing', 'ac', 'general'];
-    if (!in_array($service, $validServices)) {
-        throw new Exception('نوع خدمة غير صالح');
-    }
-    
-    // الحصول على معلومات المستخدم
-    $user = getCurrentUser();
-    if (!$user) {
-        throw new Exception('خطأ في جلب بيانات المستخدم');
-    }
-    
-    // إدراج الطلب
-    $pdo = getDB();
-    $stmt = $pdo->prepare("
-        INSERT INTO requests (user_id, address, service_type, preferred_date, description, status, created_at) 
-        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+    // جلب طلبات المستخدم من قاعدة البيانات (الأحدث أولاً)
+    $stmt = $db->prepare("
+        SELECT 
+            id,
+            address,
+            service_type,
+            preferred_date,
+            description,
+            status,
+            DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') as created_at
+        FROM requests 
+        WHERE user_id = ? 
+        ORDER BY created_at DESC
     ");
     
-    $stmt->execute([
-        $user['id'],
-        $address,
-        $service,
-        $date,
-        $description
-    ]);
-    
-    if ($stmt->rowCount() > 0) {
-        $requestId = $pdo->lastInsertId();
-        
-        // تسجيل الحدث
-        logEvent('info', 'طلب خدمة جديد', [
-            'request_id' => $requestId,
-            'user_id' => $user['id'],
-            'service_type' => $service,
-            'customer_name' => $user['name'],
-            'customer_phone' => $user['phone']
-        ]);
-        
-        echo json_encode([
-            'success' => true,
-            'message' => 'تم إرسال الطلب بنجاح! سنتواصل معك قريباً',
-            'request_id' => $requestId
-        ], JSON_UNESCAPED_UNICODE);
-    } else {
-        throw new Exception('فشل إرسال الطلب');
-    }
-    
-} catch (Exception $e) {
-    error_log("Submit Request Error: " . $e->getMessage());
+    $stmt->execute([$_SESSION['user_id']]);
+    $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+        'success' => true,
+        'data' => $requests,
+        'count' => count($requests)
+    ]);
+    
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'حدث خطأ في تحميل الطلبات']);
 }
+?>
